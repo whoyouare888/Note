@@ -16,6 +16,9 @@
 		A103E02822DF0983006E9DDD /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = A103E02722DF0983006E9DDD /* EAGLView.m */; };
 		A103E02F22DF3AE6006E9DDD /* vertex.vsh in Resources */ = {isa = PBXBuildFile; fileRef = A103E02D22DF3AE6006E9DDD /* vertex.vsh */; };
 		A103E03022DF3AE6006E9DDD /* fragment.fsh in Resources */ = {isa = PBXBuildFile; fileRef = A103E02E22DF3AE6006E9DDD /* fragment.fsh */; };
+		A103E03222E1A72E006E9DDD /* draw_image_vertex.vsh in Resources */ = {isa = PBXBuildFile; fileRef = A103E03122E1A72E006E9DDD /* draw_image_vertex.vsh */; };
+		A103E03422E1A744006E9DDD /* draw_image_fragment.vsh in Resources */ = {isa = PBXBuildFile; fileRef = A103E03322E1A744006E9DDD /* draw_image_fragment.vsh */; };
+		A103E03822E1A8FD006E9DDD /* duck.png in Resources */ = {isa = PBXBuildFile; fileRef = A103E03722E1A8FD006E9DDD /* duck.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +36,9 @@
 		A103E02722DF0983006E9DDD /* EAGLView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EAGLView.m; sourceTree = "<group>"; };
 		A103E02D22DF3AE6006E9DDD /* vertex.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = vertex.vsh; sourceTree = "<group>"; };
 		A103E02E22DF3AE6006E9DDD /* fragment.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = fragment.fsh; sourceTree = "<group>"; };
+		A103E03122E1A72E006E9DDD /* draw_image_vertex.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = draw_image_vertex.vsh; sourceTree = "<group>"; };
+		A103E03322E1A744006E9DDD /* draw_image_fragment.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = draw_image_fragment.vsh; sourceTree = "<group>"; };
+		A103E03722E1A8FD006E9DDD /* duck.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = duck.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +79,9 @@
 				A103E02722DF0983006E9DDD /* EAGLView.m */,
 				A103E02E22DF3AE6006E9DDD /* fragment.fsh */,
 				A103E02D22DF3AE6006E9DDD /* vertex.vsh */,
+				A103E03122E1A72E006E9DDD /* draw_image_vertex.vsh */,
+				A103E03322E1A744006E9DDD /* draw_image_fragment.vsh */,
+				A103E03722E1A8FD006E9DDD /* duck.png */,
 				A103E01622DF0809006E9DDD /* Main.storyboard */,
 				A103E01922DF080A006E9DDD /* Assets.xcassets */,
 				A103E01B22DF080A006E9DDD /* LaunchScreen.storyboard */,
@@ -139,11 +148,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A103E03422E1A744006E9DDD /* draw_image_fragment.vsh in Resources */,
 				A103E01D22DF080A006E9DDD /* LaunchScreen.storyboard in Resources */,
+				A103E03822E1A8FD006E9DDD /* duck.png in Resources */,
 				A103E01A22DF080A006E9DDD /* Assets.xcassets in Resources */,
 				A103E01822DF0809006E9DDD /* Main.storyboard in Resources */,
 				A103E03022DF3AE6006E9DDD /* fragment.fsh in Resources */,
 				A103E02F22DF3AE6006E9DDD /* vertex.vsh in Resources */,
+				A103E03222E1A72E006E9DDD /* draw_image_vertex.vsh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

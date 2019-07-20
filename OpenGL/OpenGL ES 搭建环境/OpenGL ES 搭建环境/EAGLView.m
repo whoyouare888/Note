@@ -16,7 +16,7 @@
     GLuint _colorBufferRender;
     GLuint _frameBuffer;
     GLuint _program;
-
+    
 }
 
 
@@ -25,7 +25,8 @@
     self = [super initWithCoder:coder];
     if (self) {
         [self setup];
-        [self draw];
+        //        [self draw];
+        [self drawImage];
     }
     return self;
 }
@@ -54,10 +55,10 @@
     glGenRenderbuffers(1, &_colorBufferRender);
     glBindRenderbuffer(GL_RENDERBUFFER, _colorBufferRender);
     [_eaglContext renderbufferStorage:GL_RENDERBUFFER fromDrawable:_eaglLayer];
-
+    
     glGenFramebuffers(1, &_frameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
-
+    
     glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                               GL_COLOR_ATTACHMENT0,
                               GL_RENDERBUFFER,
@@ -160,6 +161,91 @@
     }
     
     return shaderHandle;
+}
+
+- (void)drawImage
+{
+    glViewport(0, 0, self.frame.size.width, self.frame.size.height);
+    
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f,  0.5f, 0.0f
+    };
+    
+    float texCoords[] = {
+        0.0, 0.0,
+        1.0, 0.0,
+        0.5, 1.0
+    };
+    
+    GLuint width, height;
+    void *imageData = [self getImageData:&width height:&height];
+    
+    //生成纹理
+    glEnable(GL_TEXTURE_2D);
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+    
+
+    _program = [self compileShaders:@"draw_image_vertex.vsh" shaderFragment:@"draw_image_fragment.vsh"];
+    glUseProgram(_program);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glUniform1i(glGetUniformLocation(_program, "Texture"), 1);
+
+    GLuint _positionSlot = glGetAttribLocation(_program, "aPos");
+    GLuint _textureCoordsSlot = glGetAttribLocation(_program, "textureCoords");
+    
+    glVertexAttribPointer(_positionSlot, 3, GL_FLOAT, GL_FALSE, 0, vertices);
+    glEnableVertexAttribArray(_positionSlot);
+    
+    glVertexAttribPointer(_textureCoordsSlot, 2, GL_FLOAT, GL_FALSE, 0, texCoords);
+    glEnableVertexAttribArray(_textureCoordsSlot);
+    
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    [_eaglContext presentRenderbuffer:GL_RENDERBUFFER];
+
+
+
+}
+
+- (void *)getImageData:(GLuint *)awidth height:(GLuint *)aheight
+{
+    UIImage *image = [UIImage imageNamed:@"duck.png"];
+    
+    //转换为CGImage，获取图片基本参数
+    CGImageRef cgImageRef = [image CGImage];
+    GLuint width = (GLuint)CGImageGetWidth(cgImageRef);
+    GLuint height = (GLuint)CGImageGetHeight(cgImageRef);
+    CGRect rect = CGRectMake(0, 0, width, height);
+    
+    *awidth = width;
+    *aheight = height;
+    //
+    //绘制图片
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    void *imageData = malloc(width * height * 4);
+    CGContextRef context = CGBitmapContextCreate(imageData, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    CGContextTranslateCTM(context, 0, height);
+    CGContextScaleCTM(context, 1.0f, -1.0f);
+    CGColorSpaceRelease(colorSpace);
+    CGContextClearRect(context, rect);
+    CGContextDrawImage(context, rect, cgImageRef);
+    
+    CGContextRelease(context);
+    
+    return imageData;
 }
 
 @end
