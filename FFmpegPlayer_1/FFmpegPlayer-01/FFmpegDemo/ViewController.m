@@ -13,8 +13,7 @@
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
-#include <libavutil/samplefmt.h>
-#include <libavutil/timestamp.h>
+#include <libswscale/swscale.h>
 
 
 
@@ -37,20 +36,23 @@
 
 
 static MyView *myView;
-static const char *src_filename = "/Users/zhw/Desktop/resource/sintel_h264_aac.flv";
+static const char *src_filename = "/Users/zhw/Desktop/resource/out.mp4";
 
 static AVFormatContext *fmt_ctx = NULL;
 static AVCodecContext *video_dec_ctx = NULL, *audio_dec_ctx = NULL;
 static AVStream *video_stream = NULL;
 static int video_stream_idx = -1;
 static int width, height;
-static enum AVPixelFormat pix_fmt;
+static enum AVPixelFormat src_pix_fmt;
 static AVFrame *frame = NULL;
 static AVPacket pkt;
 
 static uint8_t *video_dst_data[4] = {NULL};
 static int video_dst_linesize[4];
 static int video_dst_bufsize;
+
+struct SwsContext *sws_ctx;
+
 
 
 
@@ -75,16 +77,32 @@ static void demux_decode(void)
         //视频流
         video_stream = fmt_ctx->streams[video_stream_idx];
         
-        //创建用于存放解码视频帧的image
+        //创建image,用于存储无对齐的image、转换后的image
         width = video_dec_ctx->width;
         height = video_dec_ctx->height;
-        pix_fmt = video_dec_ctx->pix_fmt;
-        ret = av_image_alloc(video_dst_data, video_dst_linesize, width, height, pix_fmt, 1);
+        src_pix_fmt = video_dec_ctx->pix_fmt;
+        ret = av_image_alloc(video_dst_data, video_dst_linesize, width, height, AV_PIX_FMT_YUV420P, 1);
         if (ret < 0) {
             printf("Could not allocate raw video buffer\n");
             goto end;
         }
         video_dst_bufsize = ret;
+        
+        //如果不是YUV420P格式，需要进行转换
+        if (src_pix_fmt != AV_PIX_FMT_YUV420P) {
+            /* create scaling context */
+            sws_ctx = sws_getContext(width, height, src_pix_fmt,
+                                     width, height, AV_PIX_FMT_YUV420P,
+                                     SWS_BILINEAR, NULL, NULL, NULL);
+            if (!sws_ctx) {
+                fprintf(stderr,
+                        "Impossible to create scale context for the conversion "
+                        "fmt:%s s:%dx%d -> fmt:%s s:%dx%d\n",
+                        av_get_pix_fmt_name(src_pix_fmt), width, height,
+                        av_get_pix_fmt_name(AV_PIX_FMT_YUV420P), width, height);
+                goto end;
+            }
+        }
     }
     
     //打印信息
@@ -192,15 +210,23 @@ static void decode_packet(int cached)
         }
         
         while ((ret = avcodec_receive_frame(video_dec_ctx, frame)) == 0) {
-            if (frame->width != width || frame->height != height || frame->format != pix_fmt) {
+            if (frame->width != width || frame->height != height || frame->format != src_pix_fmt) {
                 printf("Error: Width, height and pixel format have to be "
                        "constant in a rawvideo file, but the width, height or "
                        "pixel format of the input video changed");
                 return;
             }
             
-            //复制解码后的视频到之前创建的缓存区
-            av_image_copy(video_dst_data, video_dst_linesize, (const uint8_t **)frame->data, frame->linesize, pix_fmt, width, height);
+            if (src_pix_fmt != AV_PIX_FMT_YUV420P) {
+                //转换格式
+                sws_scale(sws_ctx, (const uint8_t **)frame->data,
+                          frame->linesize, 0, height, video_dst_data, video_dst_linesize);
+
+            }else {
+                //复制解码后的视频到之前创建的缓存区
+                av_image_copy(video_dst_data, video_dst_linesize, (const uint8_t **)frame->data, frame->linesize, src_pix_fmt, width, height);
+            }
+            
             av_frame_unref(frame);
             
             dispatch_async(dispatch_get_main_queue(), ^{
