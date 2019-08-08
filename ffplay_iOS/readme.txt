@@ -2,9 +2,6 @@
 ffplay显示视频、音频及线程相关操作用的是SDL库提供的功能，本项目将其替换为了iOS平台相关的API。
 移植过程中保留了绝大部分功能，去掉了字幕流(并没有去除完整)，去掉了一些option的初始化。
 
-测试时需指定输入文件路径，如：
-static const char *input_filename = "/Users/zhw/Desktop/resource/sintel_h264_aac.mp4";
-
 详细移植过程请参见博客：
 https://blog.csdn.net/whoyouare888/article/details/98870898
 

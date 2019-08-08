@@ -54,7 +54,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-//    input_filename = [[[NSBundle mainBundle] pathForResource:@"sintel_h264_aac.flv" ofType:nil] UTF8String];
+    input_filename = (char *)[[[NSBundle mainBundle] pathForResource:@"sintel_h264_aac.flv" ofType:nil] UTF8String];
     
     displayView = self.openglesView;
     
@@ -370,7 +370,7 @@ typedef struct VideoState {
 
 /* options specified by the user */
 static AVInputFormat *file_iformat;
-static char *input_filename = "/Users/zhw/Desktop/resource/sintel_h264_aac.flv";
+static char *input_filename;
 static int audio_disable;
 static int video_disable;
 static int subtitle_disable;
@@ -2170,9 +2170,6 @@ static int stream_component_open(VideoState *is, int stream_index)
             (is->audio_tgt).frame_size = av_samples_get_buffer_size(NULL, (is->audio_tgt).channels, 1, (is->audio_tgt).fmt, 1);
             (is->audio_tgt).bytes_per_sec = av_samples_get_buffer_size(NULL, (is->audio_tgt).channels, (is->audio_tgt).freq, (is->audio_tgt).fmt, 1);
             
-            audioPlayer.sampleRate = (is->audio_tgt).freq;
-            audioPlayer.channels = (is->audio_tgt).channels;
-            [audioPlayer prepare];
             
             is->audio_hw_buf_size = 1024;
             is->audio_src = is->audio_tgt;
@@ -2196,7 +2193,13 @@ static int stream_component_open(VideoState *is, int stream_index)
             }
             if ((ret = decoder_start(&is->auddec, audio_thread, is)) < 0)
                 goto out1;
-            [audioPlayer start];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                audioPlayer.sampleRate = (is->audio_tgt).freq;
+                audioPlayer.channels = (is->audio_tgt).channels;
+                [audioPlayer prepare];
+                [audioPlayer start];
+            });
             break;
         case AVMEDIA_TYPE_VIDEO:
             is->video_stream = stream_index;
