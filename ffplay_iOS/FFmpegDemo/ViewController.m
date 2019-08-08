@@ -92,8 +92,9 @@
         len1 = is->audio_buf_size - is->audio_buf_index;
         if (len1 > length)
             len1 = length;
-        if (!is->muted && is->audio_buf)
+        if (!is->muted && is->audio_buf){
             memcpy(data, (uint8_t *)is->audio_buf + is->audio_buf_index, len1);
+        }
         else {
             memset(data, 0, len1);
         }
@@ -388,7 +389,7 @@ static int fast = 0;
 static int genpts = 0;
 static int lowres = 0;
 static int decoder_reorder_pts = -1;
-static int autoexit;
+static int autoexit = 1;
 static int exit_on_keydown;
 static int exit_on_mousedown;
 static int loop = 1;
