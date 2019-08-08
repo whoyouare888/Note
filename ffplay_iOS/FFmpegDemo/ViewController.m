@@ -54,6 +54,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+//    input_filename = [[[NSBundle mainBundle] pathForResource:@"sintel_h264_aac.flv" ofType:nil] UTF8String];
     
     displayView = self.openglesView;
     
@@ -69,6 +70,8 @@
 - (void)audioPlayer:(AudioPlayer *)player data:(uint8_t *)data length:(int)length
 {
     int audio_size, len1;
+    
+    VideoState *is = vis;
     
     audio_callback_time = av_gettime_relative();
     
@@ -367,7 +370,7 @@ typedef struct VideoState {
 
 /* options specified by the user */
 static AVInputFormat *file_iformat;
-static const char *input_filename = "/Users/zhw/Desktop/resource/sintel_h264_aac.mp";
+static char *input_filename = "/Users/zhw/Desktop/resource/sintel_h264_aac.flv";
 static int audio_disable;
 static int video_disable;
 static int subtitle_disable;
@@ -1331,17 +1334,17 @@ static void video_refresh(void *opaque, double *remaining_time)
                 av_diff = get_master_clock(is) - get_clock(&is->vidclk);
             else if (is->audio_st)
                 av_diff = get_master_clock(is) - get_clock(&is->audclk);
-            av_log(NULL, AV_LOG_INFO,
-                   "%7.2f %s:%7.3f fd=%4d aq=%5dKB vq=%5dKB sq=%5dB f=%"PRId64"/%"PRId64"   \r",
-                   get_master_clock(is),
-                   (is->audio_st && is->video_st) ? "A-V" : (is->video_st ? "M-V" : (is->audio_st ? "M-A" : "   ")),
-                   av_diff,
-                   is->frame_drops_early + is->frame_drops_late,
-                   aqsize / 1024,
-                   vqsize / 1024,
-                   sqsize,
-                   is->video_st ? is->viddec.avctx->pts_correction_num_faulty_dts : 0,
-                   is->video_st ? is->viddec.avctx->pts_correction_num_faulty_pts : 0);
+//            av_log(NULL, AV_LOG_INFO,
+//                   "%7.2f %s:%7.3f fd=%4d aq=%5dKB vq=%5dKB sq=%5dB f=%"PRId64"/%"PRId64"   \r",
+//                   get_master_clock(is),
+//                   (is->audio_st && is->video_st) ? "A-V" : (is->video_st ? "M-V" : (is->audio_st ? "M-A" : "   ")),
+//                   av_diff,
+//                   is->frame_drops_early + is->frame_drops_late,
+//                   aqsize / 1024,
+//                   vqsize / 1024,
+//                   sqsize,
+//                   is->video_st ? is->viddec.avctx->pts_correction_num_faulty_dts : 0,
+//                   is->video_st ? is->viddec.avctx->pts_correction_num_faulty_pts : 0);
             fflush(stdout);
             last_time = cur_time;
         }
@@ -2051,9 +2054,9 @@ static int audio_decode_frame(VideoState *is)
 #ifdef DEBUG
     {
         static double last_clock;
-        printf("audio: delay=%0.3f clock=%0.3f clock0=%0.3f\n",
-               is->audio_clock - last_clock,
-               is->audio_clock, audio_clock0);
+//        printf("audio: delay=%0.3f clock=%0.3f clock0=%0.3f\n",
+//               is->audio_clock - last_clock,
+//               is->audio_clock, audio_clock0);
         last_clock = is->audio_clock;
     }
 #endif
@@ -2192,7 +2195,7 @@ static int stream_component_open(VideoState *is, int stream_index)
                 is->auddec.start_pts_tb = is->audio_st->time_base;
             }
             if ((ret = decoder_start(&is->auddec, audio_thread, is)) < 0)
-                goto out;
+                goto out1;
             [audioPlayer start];
             break;
         case AVMEDIA_TYPE_VIDEO:
@@ -2201,7 +2204,7 @@ static int stream_component_open(VideoState *is, int stream_index)
             
             decoder_init(&is->viddec, avctx, &is->videoq, is->continue_read_thread);
             if ((ret = decoder_start(&is->viddec, video_thread, is)) < 0)
-                goto out;
+                goto out1;
             is->queue_attachments_req = 1;
             break;
         case AVMEDIA_TYPE_SUBTITLE:
@@ -2210,16 +2213,16 @@ static int stream_component_open(VideoState *is, int stream_index)
             
             decoder_init(&is->subdec, avctx, &is->subtitleq, is->continue_read_thread);
             if ((ret = decoder_start(&is->subdec, subtitle_thread, is)) < 0)
-                goto out;
+                goto out1;
             break;
         default:
             break;
     }
-    goto out;
+    goto out1;
     
 fail:
     avcodec_free_context(&avctx);
-    out:
+out1:
     av_dict_free(&opts);
     
     return ret;
@@ -2821,7 +2824,7 @@ static void event_loop(VideoState *cur_stream)
 
 
 
-static VideoState *is;
+static VideoState *vis;
 int start_play(void)
 {
     
@@ -2835,14 +2838,13 @@ int start_play(void)
     av_init_packet(&flush_pkt);
     flush_pkt.data = (uint8_t *)&flush_pkt;
     
-    is = stream_open(input_filename, file_iformat);
-    if (!is) {
+    vis = stream_open(input_filename, file_iformat);
+    if (!vis) {
         av_log(NULL, AV_LOG_FATAL, "Failed to initialize VideoState!\n");
         do_exit(NULL);
     }
     [NSThread detachNewThreadWithBlock:^{
-        event_loop(is);
-
+        event_loop(vis);
     }];
     
     return 0;
