@@ -367,7 +367,7 @@ typedef struct VideoState {
 
 /* options specified by the user */
 static AVInputFormat *file_iformat;
-static const char *input_filename = "/Users/zhw/Desktop/resource/sintel_h264_aac.mp4";
+static const char *input_filename = "/Users/zhw/Desktop/resource/sintel_h264_aac.mp";
 static int audio_disable;
 static int video_disable;
 static int subtitle_disable;
@@ -916,6 +916,7 @@ static void stream_component_close(VideoState *is, int stream_index)
     switch (codecpar->codec_type) {
         case AVMEDIA_TYPE_AUDIO:
             decoder_abort(&is->auddec, &is->sampq);
+            [audioPlayer stop];
             decoder_destroy(&is->auddec);
             swr_free(&is->swr_ctx);
             av_freep(&is->audio_buf1);
@@ -2169,7 +2170,6 @@ static int stream_component_open(VideoState *is, int stream_index)
             audioPlayer.sampleRate = (is->audio_tgt).freq;
             audioPlayer.channels = (is->audio_tgt).channels;
             [audioPlayer prepare];
-            [audioPlayer start];
             
             is->audio_hw_buf_size = 1024;
             is->audio_src = is->audio_tgt;
@@ -2193,6 +2193,7 @@ static int stream_component_open(VideoState *is, int stream_index)
             }
             if ((ret = decoder_start(&is->auddec, audio_thread, is)) < 0)
                 goto out;
+            [audioPlayer start];
             break;
         case AVMEDIA_TYPE_VIDEO:
             is->video_stream = stream_index;
@@ -2284,7 +2285,7 @@ static int read_thread(void *arg)
 
     err = avformat_open_input(&ic, is->filename, is->iformat, NULL);
     if (err < 0) {
-        printf("avformat_open_input error\n");
+        printf("open input file error\n");
         ret = -1;
         goto fail;
     }
@@ -2538,7 +2539,7 @@ fail:
         avformat_close_input(&ic);
     
     if (ret != 0) {
-        
+        event_type = EVENT_TYPE_STOP;
     }
     return 0;
 }
