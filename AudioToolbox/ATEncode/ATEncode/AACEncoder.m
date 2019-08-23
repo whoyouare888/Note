@@ -58,8 +58,8 @@
     outAudioStreamBasicDescription.mReserved = 0; // 8字节对齐，填0.
     AudioClassDescription *description = [self
                                           getAudioClassDescriptionWithType:kAudioFormatMPEG4AAC
-                                          fromManufacturer:kAppleSoftwareAudioCodecManufacturer]; //软编
-    
+                                          fromManufacturer:kAppleHardwareAudioCodecManufacturer]; //硬编
+
     OSStatus status = AudioConverterNewSpecific(&inAudioStreamBasicDescription, &outAudioStreamBasicDescription, 1, description, &_audioConverter); // 创建转换器
     if (status != 0) {
         NSLog(@"setup converter: %d", (int)status);
