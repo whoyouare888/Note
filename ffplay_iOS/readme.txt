@@ -7,4 +7,4 @@ https://blog.csdn.net/whoyouare888/article/details/98870898
 
 由于ffmpeg的库文件过大，故放到了别处，下载后，放到项目当中即可。
 库文件下载地址：
-https://download.csdn.net/upload/11200878
+https://download.csdn.net/download/whoyouare888/11200878
